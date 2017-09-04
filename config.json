@@ -5,11 +5,11 @@
 		"Port": 8124,
 		"provision": {
 			"Directory": "provision",
-			"Tags": [ "hostname" ],
 			"FileName": "$hostname",
 			"FileExtension": "log",
 			"FileDirectorySplit": "-",
-			"FileDirectoryDepth": 1
+			"FileDirectoryDepth": 1,
+			"Format": "$text"
 		}
 	}
 }

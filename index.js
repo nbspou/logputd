@@ -8,6 +8,8 @@ let config = require('./config');
 
 let dgram = require('dgram');
 
+let logFiles = { };
+
 let dogcatUdpSocket = dgram.createSocket('udp4');
 
 let dogcatTagMap = {
@@ -20,6 +22,10 @@ dogcatUdpSocket.on('listening', function () {
 	let address = dogcatUdpSocket.address();
 	console.log('UDP Server listening on ' + address.address + ":" + address.port);
 });
+
+String.prototype.replaceAt = function(index, replacement) {
+    return this.substr(0, index) + replacement + this.substr(index + replacement.length);
+};
 
 dogcatUdpSocket.on('message', function(msg, rinfo) {
 	let messages = msg.toString().split('\n');
@@ -45,6 +51,9 @@ dogcatUdpSocket.on('message', function(msg, rinfo) {
 			tags.address = rinfo.address;
 			if (title.length) {
 				tags.title = title;
+			}
+			if (text.length) {
+				tags.text = text;
 			}
 			let j;
 			for (j = 0; j < remaining.length; ++j) {
@@ -75,10 +84,28 @@ dogcatUdpSocket.on('message', function(msg, rinfo) {
 					for (let tag in tags) {
 						fileName = fileName.replace('$' + tag, tags[tag]);
 					}
+					if (cfg.FileDirectorySplit) {
+						let s = cfg.FileDirectorySplit;
+						let k;
+						let nb = 0;
+						for (k = 0; k < fileName.length; ++k) {
+							if (fileName[k] == s) {
+								fileName = fileName.replaceAt(k, '/')
+								++nb;
+								if (nb >= cfg.FileDirectoryDepth) {
+									break;
+								}
+							}
+						}
+					}
+					let format = cfg.Format;
+					for (let tag in tags) {
+						format = format.replace('$' + tag, tags[tag]);
+					}
 					console.log(config.LogDirectory 
 						+ '/' + cfg.Directory
 						+ '/' + fileName + '.' + cfg.FileExtension);
-					console.log(text);
+					console.log(format);
 					break;
 				}
 			}
