@@ -1,6 +1,6 @@
 {
   "name": "logputd",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Stores logs received from remote hosts in local files and puts them on S3 storage for daily rotation",
   "main": "index.js",
   "scripts": {
@@ -25,6 +25,8 @@
   },
   "homepage": "https://github.com/nbspou/logputd#readme",
   "dependencies": {
-    "mkdirp": "^0.5.1"
+    "mkdirp": "^0.5.1",
+    "node-cron": "^1.2.1",
+    "s3": "^4.4.0"
   }
 }

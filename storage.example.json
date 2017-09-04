@@ -1,0 +1,7 @@
+{
+	"Endpoint": "nyc3.digitaloceanspaces.com",
+	"Bucket": "",
+	"Key": "",
+	"SecretKey": "",
+	"ContentType": "text/plain"
+}

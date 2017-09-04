@@ -2,11 +2,20 @@
 
 //  echo "hello world" 2>&1 | dogcat 127.0.0.1 8124 -d -o "#provision,hostname:"$HOSTNAME-sgp1-01 -
 
-let fs = require('fs');
-let mkdirp = require('mkdirp');
 let config = require('./config');
+let storage;
+try {
+	storage = require('./storage');
+} catch (err) {
+	console.log("Storage not configured");
+}
 
 let dgram = require('dgram');
+let fs = require('fs');
+
+let mkdirp = require('mkdirp');
+let cron = require('node-cron');
+let s3 = require('s3');
 
 let logFiles = { };
 
@@ -24,7 +33,7 @@ dogcatUdpSocket.on('listening', function () {
 });
 
 String.prototype.replaceAt = function(index, replacement) {
-    return this.substr(0, index) + replacement + this.substr(index + replacement.length);
+	return this.substr(0, index) + replacement + this.substr(index + replacement.length);
 };
 
 dogcatUdpSocket.on('message', function(msg, rinfo) {
@@ -103,7 +112,7 @@ dogcatUdpSocket.on('message', function(msg, rinfo) {
 					}
 					fileName = (cfg.Directory ? (cfg.Directory + '/') : '') + fileName;
 					let filePath = config.LogDirectory
-						+ '/' + fileName + '.' + cfg.FileExtension;
+						+ '/' + fileName;
 					let logFile = logFiles[fileName];
 					if (!logFile) {
 						logFile = {
@@ -128,3 +137,55 @@ dogcatUdpSocket.on('message', function(msg, rinfo) {
 });
 
 dogcatUdpSocket.bind(config.dogcat.Port);
+
+let s3Client;
+
+function uploadAll() {
+	
+}
+
+if (storage) {
+	s3Client = s3.createClient({
+		maxAsyncS3: 20,     // this is the default
+		s3RetryCount: 3,    // this is the default
+		s3RetryDelay: 1000, // this is the default
+		multipartUploadThreshold: 20971520, // this is the default (20 MB)
+		multipartUploadSize: 15728640, // this is the default (15 MB)
+		s3Options: {
+			accessKeyId: storage.Key,
+			secretAccessKey: storage.SecretKey,
+			endpoint: storage.Endpoint,
+			// sslEnabled: false
+			// any other options are passed to new AWS.S3()
+			// See: http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Config.html#constructor-property
+		},
+	});
+	
+	var params = {
+		localFile: "/home/me/logputd/package.json",
+		s3Params: {
+			Bucket: storage.Bucket,
+			Key: "test.log",
+			ContentType: storage.ContentType
+			// other options supported by putObject, except Body and ContentLength. 
+			// See: http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property 
+		},
+	};
+
+	let uploader = s3Client.uploadFile(params);
+	uploader.on('error', function(err) {
+		console.error("unable to upload:", err.stack);
+	});
+	uploader.on('progress', function() {
+		console.log("progress", uploader.progressMd5Amount,
+			uploader.progressAmount, uploader.progressTotal);
+	});
+	uploader.on('end', function() {
+		console.log("done uploading");
+	});
+
+	cron.schedule(config.Cron, function() {
+		
+	});
+}
+

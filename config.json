@@ -1,12 +1,13 @@
 {
 	"LogDirectory": "/home/me/logs",
 	"RotateDirectory": "/home/me/rotate",
+	"FileExtension": "log",
+	"Cron": "0 0 * * *",
 	"dogcat": {
 		"Port": 8124,
 		"provision": {
 			"Directory": "provision",
 			"FileName": "$hostname",
-			"FileExtension": "log",
 			"FileDirectorySplit": "-",
 			"FileDirectoryDepth": 1,
 			"Format": "$text"
