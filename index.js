@@ -2,7 +2,7 @@
 
 //  echo "hello world" 2>&1 | dogcat 127.0.0.1 8124 -d -o "#provision,hostname:"$HOSTNAME-sgp1-01 -
 
-let net = require('net');
+let fs = require('fs');
 let mkdirp = require('mkdirp');
 let config = require('./config');
 
@@ -34,7 +34,6 @@ dogcatUdpSocket.on('message', function(msg, rinfo) {
 	for (i = 0; i < messages.length; ++i) {
 		str = messages[i];
 		if (str.startsWith("_e{")) {
-			console.log(str);
 			let titleLenIdx = 3;
 			let titleLenLen = str.indexOf(',', titleLenIdx) - titleLenIdx;
 			let textLenIdx = titleLenIdx + titleLenLen + 1;
@@ -90,7 +89,7 @@ dogcatUdpSocket.on('message', function(msg, rinfo) {
 						let nb = 0;
 						for (k = 0; k < fileName.length; ++k) {
 							if (fileName[k] == s) {
-								fileName = fileName.replaceAt(k, '/')
+								fileName = fileName.replaceAt(k, '/');
 								++nb;
 								if (nb >= cfg.FileDirectoryDepth) {
 									break;
@@ -102,10 +101,26 @@ dogcatUdpSocket.on('message', function(msg, rinfo) {
 					for (let tag in tags) {
 						format = format.replace('$' + tag, tags[tag]);
 					}
-					console.log(config.LogDirectory 
+					fileName = (cfg.Directory ? (cfg.Directory + '/') : '') + fileName;
+					let filePath = config.LogDirectory 
 						+ '/' + cfg.Directory
-						+ '/' + fileName + '.' + cfg.FileExtension);
-					console.log(format);
+						+ '/' + fileName + '.' + cfg.FileExtension;
+					let logFile = logFiles[fileName];
+					if (!logFile) {
+						logFile = {
+							fileName: fileName,
+							filePath: filePath,
+							cfg: cfg
+						};
+						let parentDir = filePath.slice(0, filePath.lastIndexOf('/'));
+						mkdirp.sync(parentDir);
+						logFile.stream = fs.createWriteStream(filePath, { flags: 'a' });
+						logFiles[fileName] = logFile;
+					}
+					if (logFile) {
+						logFile.stream.write(text);
+						logFile.stream.write('\n');
+					}
 					break;
 				}
 			}
