@@ -102,8 +102,7 @@ dogcatUdpSocket.on('message', function(msg, rinfo) {
 						format = format.replace('$' + tag, tags[tag]);
 					}
 					fileName = (cfg.Directory ? (cfg.Directory + '/') : '') + fileName;
-					let filePath = config.LogDirectory 
-						+ '/' + cfg.Directory
+					let filePath = config.LogDirectory
 						+ '/' + fileName + '.' + cfg.FileExtension;
 					let logFile = logFiles[fileName];
 					if (!logFile) {
