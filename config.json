@@ -2,6 +2,7 @@
 	"LogDirectory": "/home/me/logs",
 	"RotateDirectory": "/home/me/rotate",
 	"dogcat": {
+		"Port": 8124,
 		"provision": {
 			"Directory": "provision",
 			"Tags": [ "hostname" ],
