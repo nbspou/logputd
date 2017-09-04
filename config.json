@@ -1,0 +1,14 @@
+{
+	"LogDirectory": "/home/me/logs",
+	"RotateDirectory": "/home/me/rotate",
+	"dogcat": {
+		"provision": {
+			"Directory": "provision",
+			"Tags": [ "hostname" ],
+			"FileName": "$hostname",
+			"FileExtension": "log",
+			"FileDirectorySplit": "-",
+			"FileDirectoryDepth": 1
+		}
+	}
+}
