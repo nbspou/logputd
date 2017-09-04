@@ -188,7 +188,7 @@ if (storage) {
 	});
 
 	uploadAll();
-	cron.schedule(config.Cron, function() {
+	cron.schedule(storage.Cron, function() {
 		rotateAll(uploadAll);
 	});
 }
