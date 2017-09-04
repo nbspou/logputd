@@ -18,6 +18,7 @@ let cron = require('node-cron');
 let s3 = require('s3');
 
 let logFiles = { };
+let s3Client;
 
 let dogcatUdpSocket = dgram.createSocket('udp4');
 
@@ -138,7 +139,9 @@ dogcatUdpSocket.on('message', function(msg, rinfo) {
 
 dogcatUdpSocket.bind(config.dogcat.Port);
 
-let s3Client;
+function rotateAll(callback) {
+	
+}
 
 function uploadAll() {
 	
@@ -184,8 +187,8 @@ if (storage) {
 		console.log("done uploading");
 	});
 
+	uploadAll();
 	cron.schedule(config.Cron, function() {
-		
+		rotateAll(uploadAll);
 	});
 }
-
