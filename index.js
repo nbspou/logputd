@@ -2,16 +2,29 @@
 
 //  echo "hello world" 2>&1 | dogcat 127.0.0.1 8124 -d -o "#provision,hostname:"$HOSTNAME-sgp1-01 -
 
-let config = require('./config');
+let fs = require('fs');
+
+if (process.env.LOGPUTD_CONFIG) {
+	if (!fs.existsSync(process.env.LOGPUTD_CONFIG)) {
+		console.log("Config file does not exist: " + process.env.LOGPUTD_CONFIG + ", using default");
+	}
+}
+
+if (process.env.LOGPUTD_STORAGE) {
+	if (!fs.existsSync(process.env.LOGPUTD_STORAGE)) {
+		console.log("Storage file does not exist: " + process.env.LOGPUTD_STORAGE);
+	}
+}
+
+let config = require(process.env.LOGPUTD_CONFIG || './config');
 let storage;
 try {
-	storage = require('./storage');
+	storage = require(process.env.LOGPUTD_STORAGE || './storage');
 } catch (err) {
-	console.log("Storage not configured");
+	console.log("Storage not configured: " + err);
 }
 
 let dgram = require('dgram');
-let fs = require('fs');
 
 let mkdirp = require('mkdirp');
 let cron = require('node-cron');

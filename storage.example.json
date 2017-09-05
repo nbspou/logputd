@@ -1,7 +1,10 @@
 {
+	"Cron": "0 0 * * *",
 	"Endpoint": "nyc3.digitaloceanspaces.com",
 	"Bucket": "",
 	"Key": "",
 	"SecretKey": "",
-	"ContentType": "text/plain"
+	"Directory": "logs",
+	"ContentType": "text/plain";
+	"FileExtension": "log"
 }
