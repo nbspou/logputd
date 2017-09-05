@@ -37,3 +37,12 @@ Startup persistent logputd service under current user
 pm2 start logputd
 pm2 save
 ```
+
+## Upgrade
+
+Upgrade packages and restart service
+```
+sudo npm upgrade -g pm2
+sudo npm upgrade -g logputd
+pm2 restart logputd
+```
