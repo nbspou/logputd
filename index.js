@@ -197,31 +197,77 @@ function rotateAll(callback) {
 	});
 }
 
+function keyExists(storagePath, callback) {
+	let params = {
+		Bucket: storage.Bucket, 
+		Key: storagePath
+	};
+	return s3Client.s3.headObject(params, function(err, data) {
+		if (err) {
+			if (err.statusCode == 404) {
+				return callback && callback(null, false);
+			}
+			console.error("Error checking file: " + err);
+			return callback && callback(err, false);
+		}
+		return callback && callback(null, !!data && !!data.ContentLength);
+	});
+}
+
 function uploadAndDelete(filePath, storagePath, callback) {
 	
 	// TODO: Validate storagePath does not exist, and keep renaming otherwise until one is available
 	
-	var params = {
-		localFile: filePath,
-		s3Params: {
-			Bucket: storage.Bucket,
-			Key: storagePath,
-			ContentType: storage.ContentType
-			// other options supported by putObject, except Body and ContentLength. 
-			// See: http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property 
-		},
-	};
-
-	let uploader = s3Client.uploadFile(params);
-	uploader.on('error', function(err) {
-		console.error("Unable to upload:", err.stack);
-		return callback(err);
-	});
+	keyExists(storagePath);
 	
-	uploader.on('end', function() {
-		fs.unlink(filePath);
-		return callback();
-	});
+	let finalStoragePath = storagePath;
+	let storagePathExtIdx = storagePath.lastIndexOf('.');
+	let storagePathBase = storagePath.slice(0, storagePathExtIdx);
+	let storagePathExt = storagePath.slice(storagePathExtIdx + 1);
+	let storageIdx = 1;
+	
+	let continueUpload = function() {
+		console.log("Store " + filePath + " -> " + finalStoragePath);
+		
+		let params = {
+			localFile: filePath,
+			s3Params: {
+				Bucket: storage.Bucket,
+				Key: finalStoragePath,
+				ContentType: storage.ContentType
+				// other options supported by putObject, except Body and ContentLength. 
+				// See: http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property 
+			},
+		};
+	
+		let uploader = s3Client.uploadFile(params);
+		uploader.on('error', function(err) {
+			console.error("Unable to upload:", err.stack);
+			return callback(err);
+		});
+		
+		uploader.on('end', function() {
+			fs.unlink(filePath);
+			console.log("Store OK: " + finalStoragePath);
+			return callback();
+		});
+	};
+	
+	let continueCheck = function() {
+		return keyExists(finalStoragePath, function(err, exists) {
+			if (err) return callback(err);
+			if (exists) {
+				console.log("Already exists: " + finalStoragePath);
+				finalStoragePath = storagePathBase + '_' + storageIdx + '.' + storagePathExt;
+				++storageIdx;
+				return continueCheck();
+			} else {
+				return continueUpload();
+			}
+		});
+	};
+	
+	return continueCheck();
 }
 
 function uploadAll(callback) {
@@ -230,7 +276,6 @@ function uploadAll(callback) {
 		return async.eachSeries(files, function(file, callback) {
 			let fileBase = file.slice(config.RotateDirectory.length + 1);
 			let storageFile = storage.Directory + '/' + fileBase;
-			console.log("Store " + file + " -> " + storageFile);
 			return uploadAndDelete(file, storageFile, callback);
 		}, function(err) {
 			return callback && callback(err);
@@ -254,6 +299,8 @@ if (storage) {
 			// See: http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Config.html#constructor-property
 		},
 	});
+	
+	console.log(s3Client.s3.headObject);
 	
 	uploadAll();
 	cron.schedule(storage.Cron, function() {
