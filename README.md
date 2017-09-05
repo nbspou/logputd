@@ -8,6 +8,24 @@ Install logputd
 sudo npm install -g logputd
 ```
 
+Configure logputd
+```
+cd ~
+mkdir .logputd
+cd .logputd
+wget https://raw.githubusercontent.com/nbspou/logputd/master/config.json
+wget https://raw.githubusercontent.com/nbspou/logputd/master/storage.example.json
+nano storage.example.json
+mv storage.example.json storage.json
+```
+
+Run logputd
+```
+logputd
+```
+
+## Startup service
+
 Install PM2 and start persistent service for the current user
 ```
 sudo npm install -g pm2
