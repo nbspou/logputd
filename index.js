@@ -7,12 +7,14 @@ let fs = require('fs');
 if (process.env.LOGPUTD_CONFIG) {
 	if (!fs.existsSync(process.env.LOGPUTD_CONFIG)) {
 		console.log("Config file does not exist: " + process.env.LOGPUTD_CONFIG + ", using default");
+		delete process.env.LOGPUTD_CONFIG;
 	}
 }
 
 if (process.env.LOGPUTD_STORAGE) {
 	if (!fs.existsSync(process.env.LOGPUTD_STORAGE)) {
 		console.log("Storage file does not exist: " + process.env.LOGPUTD_STORAGE);
+		delete process.env.LOGPUTD_STORAGE;
 	}
 }
 
