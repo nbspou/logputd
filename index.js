@@ -146,7 +146,7 @@ dogcatUdpSocket.on('message', function(msg, rinfo) {
 					}
 					if (logFile) {
 						logFile.stream.write(text);
-						logFile.stream.write('\n');
+						logFile.stream.write('\r\n');
 					}
 					break;
 				}
@@ -228,7 +228,6 @@ function uploadAndDelete(filePath, storagePath, callback) {
 function uploadAll(callback) {
 	return dir.files(config.RotateDirectory, function(err, files) {
 		if (err) return callback && callback(err);
-		console.log(files);
 		return async.eachSeries(files, function(file, callback) {
 			let fileBase = file.slice(config.RotateDirectory.length + 1);
 			let storageFile = storage.Directory + '/' + fileBase;
