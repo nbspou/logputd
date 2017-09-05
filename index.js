@@ -129,7 +129,6 @@ dogcatUdpSocket.on('message', function(msg, rinfo) {
 					for (let tag in tags) {
 						format = format.replace('$' + tag, tags[tag]);
 					}
-					fileName = (cfg.Directory ? (cfg.Directory + '/') : '') + fileName;
 					let filePath = config.LogDirectory
 						+ '/' + fileName;
 					let logFile = logFiles[fileName];
@@ -155,7 +154,7 @@ dogcatUdpSocket.on('message', function(msg, rinfo) {
 	}
 });
 
-dogcatUdpSocket.bind(config.dogcat.Port);
+dogcatUdpSocket.bind(process.env.LOGPUTD_DOGCAT_PORT || config.dogcat.Port);
 
 function rotateAll(callback) {
 	let timePrefix = dateFormat(storage.TimePrefix);

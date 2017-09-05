@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "LOGPUTD_CONFIG=~/.logputd/config.json LOGPUTD_STORAGE=~/.logputd/storage.json node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "LOGPUTD_CONFIG=~/.logputd/config.json LOGPUTD_STORAGE=~/.logputd/storage.json LOGPUTD_DOGCAT_PORT=8123 node index.js"
   },
   "repository": {
     "type": "git",

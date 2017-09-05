@@ -5,6 +5,7 @@
 	"Key": "",
 	"SecretKey": "",
 	"Directory": "logs",
-	"ContentType": "text/plain";
+	"ContentType": "text/plain",
+	"TimePrefix": "yyyy-mm-dd-HH",
 	"FileExtension": "log"
 }

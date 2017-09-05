@@ -4,8 +4,7 @@
 	"dogcat": {
 		"Port": 8124,
 		"provision": {
-			"Directory": "provision",
-			"FileName": "$hostname",
+			"FileName": "provision/$hostname",
 			"FileDirectorySplit": "-",
 			"FileDirectoryDepth": 1,
 			"Format": "$text"
