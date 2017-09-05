@@ -6,14 +6,14 @@ let fs = require('fs');
 
 if (process.env.LOGPUTD_CONFIG) {
 	if (!fs.existsSync(process.env.LOGPUTD_CONFIG)) {
-		console.log("Config file does not exist: " + process.env.LOGPUTD_CONFIG + ", using default");
+		console.error("Config file does not exist: " + process.env.LOGPUTD_CONFIG + ", using default");
 		delete process.env.LOGPUTD_CONFIG;
 	}
 }
 
 if (process.env.LOGPUTD_STORAGE) {
 	if (!fs.existsSync(process.env.LOGPUTD_STORAGE)) {
-		console.log("Storage file does not exist: " + process.env.LOGPUTD_STORAGE);
+		console.error("Storage file does not exist: " + process.env.LOGPUTD_STORAGE);
 		delete process.env.LOGPUTD_STORAGE;
 	}
 }
@@ -23,7 +23,7 @@ let storage;
 try {
 	storage = require(process.env.LOGPUTD_STORAGE || './storage');
 } catch (err) {
-	console.log("Storage not configured: " + err);
+	console.error("Storage not configured: " + err);
 }
 
 let dgram = require('dgram');
@@ -31,6 +31,9 @@ let dgram = require('dgram');
 let mkdirp = require('mkdirp');
 let cron = require('node-cron');
 let s3 = require('s3');
+let dir = require('node-dir');
+let async = require('async');
+var dateFormat = require('dateformat');
 
 let logFiles = { };
 let s3Client;
@@ -155,7 +158,55 @@ dogcatUdpSocket.on('message', function(msg, rinfo) {
 dogcatUdpSocket.bind(config.dogcat.Port);
 
 function rotateAll(callback) {
+	let timePrefix = dateFormat(storage.TimePrefix);
+	return dir.files(config.LogDirectory, function(err, files) {
+		if (err) return callback && callback(err);
+		return async.eachSeries(files, function(file, callback) {
+			let fileBase = file.slice(config.LogDirectory.length + 1);
+			let fileBaseNameIdx = fileBase.lastIndexOf('/');
+			let fileBaseFolder = fileBase.slice(0, fileBaseNameIdx);
+			let fileBaseName = fileBase.slice(fileBaseNameIdx + 1);
+			let rotateFileFolder = config.RotateDirectory + '/' + fileBaseFolder;
+			let rotateFileBase = config.RotateDirectory + '/' + fileBaseFolder + '/' + timePrefix + '_' + fileBaseName;
+			let rotateFilePath = rotateFileBase + '.' + storage.FileExtension;
+			let addIdx = 1;
+			while (fs.existsSync(rotateFilePath)) {
+				rotateFilePath = rotateFileBase + '_' + addIdx + '.' + storage.FileExtension;
+				++addIdx;
+			}
+			console.log(file + '->' + rotateFilePath);
+			return mkdirp(rotateFileFolder, function(err) {
+				if (err) return callback && callback(err);
+				return fs.rename(file, rotateFilePath, callback);
+			});
+		}, function(err) {
+			return callback && callback(err);
+		});
+	});
+}
+
+rotateAll();
+
+function uploadAndDelete(filePath, storagePath) {
+		var params = {
+		localFile: filePath,
+		s3Params: {
+			Bucket: storage.Bucket,
+			Key: storagePath,
+			ContentType: storage.ContentType
+			// other options supported by putObject, except Body and ContentLength. 
+			// See: http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property 
+		},
+	};
+
+	let uploader = s3Client.uploadFile(params);
+	uploader.on('error', function(err) {
+		console.error("Unable to upload:", err.stack);
+	});
 	
+	uploader.on('end', function() {
+		fs.unlink(filePath);
+	});
 }
 
 function uploadAll() {
@@ -179,29 +230,6 @@ if (storage) {
 		},
 	});
 	
-	var params = {
-		localFile: "/home/me/logputd/package.json",
-		s3Params: {
-			Bucket: storage.Bucket,
-			Key: "test.log",
-			ContentType: storage.ContentType
-			// other options supported by putObject, except Body and ContentLength. 
-			// See: http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property 
-		},
-	};
-
-	let uploader = s3Client.uploadFile(params);
-	uploader.on('error', function(err) {
-		console.error("unable to upload:", err.stack);
-	});
-	uploader.on('progress', function() {
-		console.log("progress", uploader.progressMd5Amount,
-			uploader.progressAmount, uploader.progressTotal);
-	});
-	uploader.on('end', function() {
-		console.log("done uploading");
-	});
-
 	uploadAll();
 	cron.schedule(storage.Cron, function() {
 		rotateAll(uploadAll);

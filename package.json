@@ -25,8 +25,11 @@
   },
   "homepage": "https://github.com/nbspou/logputd#readme",
   "dependencies": {
+    "async": "^2.5.0",
+    "dateformat": "^2.0.0",
     "mkdirp": "^0.5.1",
     "node-cron": "^1.2.1",
+    "node-dir": "^0.1.17",
     "s3": "^4.4.0"
   }
 }
