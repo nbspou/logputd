@@ -1,11 +1,14 @@
 {
   "name": "logputd",
-  "version": "1.0.1",
+  "version": "1.0.5",
   "description": "Stores logs received from remote hosts in local files and puts them on S3 storage for daily rotation",
   "main": "index.js",
   "scripts": {
     "start": "LOGPUTD_CONFIG=~/.logputd/config.json LOGPUTD_STORAGE=~/.logputd/storage.json node index.js",
     "test": "LOGPUTD_CONFIG=~/.logputd/config.json LOGPUTD_STORAGE=~/.logputd/storage.json LOGPUTD_DOGCAT_PORT=8123 node index.js"
+  },
+  "bin": {
+    "logputd": "./logputd"
   },
   "repository": {
     "type": "git",
