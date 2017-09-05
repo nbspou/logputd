@@ -111,6 +111,7 @@ dogcatUdpSocket.on('message', function(msg, rinfo) {
 					for (let tag in tags) {
 						fileName = fileName.replace('$' + tag, tags[tag]);
 					}
+					fileName = fileName.replace('..', '._.');
 					if (cfg.FileDirectorySplit) {
 						let s = cfg.FileDirectorySplit;
 						let k;
