@@ -300,8 +300,6 @@ if (storage) {
 		},
 	});
 	
-	console.log(s3Client.s3.headObject);
-	
 	uploadAll();
 	cron.schedule(storage.Cron, function() {
 		rotateAll(uploadAll);
