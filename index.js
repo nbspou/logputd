@@ -174,9 +174,22 @@ function rotateAll(callback) {
 				rotateFilePath = rotateFileBase + '_' + addIdx + '.' + storage.FileExtension;
 				++addIdx;
 			}
-			console.log(file + '->' + rotateFilePath);
 			return mkdirp(rotateFileFolder, function(err) {
 				if (err) return callback && callback(err);
+				let logFile = logFiles[fileBase];
+				if (logFile) {
+					delete logFiles[fileBase];
+					console.log("Rotate " + file + " -> " + rotateFilePath);
+					return fs.rename(file, rotateFilePath, function(err) {
+						if (err) console.error("Error " + err);
+						console.log("Close " + fileBase);
+						return logFile.stream.end(function() {
+							logFile.stream.destroy();
+							return callback(err);
+						});
+					});
+				}
+				console.log("Rotate " + file + " -> " + rotateFilePath);
 				return fs.rename(file, rotateFilePath, callback);
 			});
 		}, function(err) {
@@ -185,10 +198,11 @@ function rotateAll(callback) {
 	});
 }
 
-rotateAll();
-
-function uploadAndDelete(filePath, storagePath) {
-		var params = {
+function uploadAndDelete(filePath, storagePath, callback) {
+	
+	// TODO: Validate storagePath does not exist, and keep renaming otherwise until one is available
+	
+	var params = {
 		localFile: filePath,
 		s3Params: {
 			Bucket: storage.Bucket,
@@ -202,15 +216,28 @@ function uploadAndDelete(filePath, storagePath) {
 	let uploader = s3Client.uploadFile(params);
 	uploader.on('error', function(err) {
 		console.error("Unable to upload:", err.stack);
+		return callback(err);
 	});
 	
 	uploader.on('end', function() {
 		fs.unlink(filePath);
+		return callback();
 	});
 }
 
-function uploadAll() {
-	
+function uploadAll(callback) {
+	return dir.files(config.RotateDirectory, function(err, files) {
+		if (err) return callback && callback(err);
+		console.log(files);
+		return async.eachSeries(files, function(file, callback) {
+			let fileBase = file.slice(config.RotateDirectory.length + 1);
+			let storageFile = storage.Directory + '/' + fileBase;
+			console.log("Store " + file + " -> " + storageFile);
+			return uploadAndDelete(file, storageFile, callback);
+		}, function(err) {
+			return callback && callback(err);
+		});
+	});
 }
 
 if (storage) {
