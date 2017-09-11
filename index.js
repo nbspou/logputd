@@ -5,23 +5,31 @@
 let fs = require('fs');
 
 if (process.env.LOGPUTD_CONFIG) {
-	if (!fs.existsSync(process.env.LOGPUTD_CONFIG)) {
-		console.error("Config file does not exist: " + process.env.LOGPUTD_CONFIG + ", using default");
-		delete process.env.LOGPUTD_CONFIG;
-	}
+	global.LOGPUTD_CONFIG = process.env.LOGPUTD_CONFIG;
 }
 
 if (process.env.LOGPUTD_STORAGE) {
-	if (!fs.existsSync(process.env.LOGPUTD_STORAGE)) {
-		console.error("Storage file does not exist: " + process.env.LOGPUTD_STORAGE);
-		delete process.env.LOGPUTD_STORAGE;
+	global.LOGPUTD_CONFIG = process.env.LOGPUTD_STORAGE;
+}
+
+if (global.LOGPUTD_CONFIG) {
+	if (!fs.existsSync(global.LOGPUTD_CONFIG)) {
+		console.error("Config file does not exist: " + global.LOGPUTD_CONFIG + ", using default");
+		delete global.LOGPUTD_CONFIG;
 	}
 }
 
-let config = require(process.env.LOGPUTD_CONFIG || './config');
+if (global.LOGPUTD_STORAGE) {
+	if (!fs.existsSync(global.LOGPUTD_STORAGE)) {
+		console.error("Storage file does not exist: " + global.LOGPUTD_STORAGE);
+		delete global.LOGPUTD_STORAGE;
+	}
+}
+
+let config = require(global.LOGPUTD_CONFIG || './config');
 let storage;
 try {
-	storage = require(process.env.LOGPUTD_STORAGE || './storage');
+	storage = require(global.LOGPUTD_STORAGE || './storage');
 } catch (err) {
 	console.error("Storage not configured: " + err);
 }

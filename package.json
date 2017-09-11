@@ -1,6 +1,6 @@
 {
   "name": "logputd",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Stores logs received from remote hosts in local files and puts them on S3 storage for daily rotation",
   "main": "index.js",
   "scripts": {
